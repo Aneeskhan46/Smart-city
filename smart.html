@@ -1,0 +1,1427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CityPulse - Smart City Monitoring Dashboard</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        :root {
+            --primary: #1a56db;
+            --primary-dark: #1e429f;
+            --secondary: #0694a2;
+            --accent: #7e3af2;
+            --success: #31c48d;
+            --warning: #ff5a1f;
+            --danger: #e02424;
+            --light-bg: #f9fafb;
+            --card-bg: #ffffff;
+            --dark-text: #1f2937;
+            --light-text: #6b7280;
+            --border-color: #e5e7eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--light-bg);
+            color: var(--dark-text);
+            overflow-x: hidden;
+        }
+
+        /* Loading Screen with Flickering Effect */
+        .loader-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--primary);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .loader-content {
+            text-align: center;
+            position: relative;
+        }
+
+        .loader-logo {
+            width: 150px;
+            height: 150px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+
+        .city-silhouette {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 150px;
+            height: 80px;
+            background-color: rgba(0, 0, 0, 0.5);
+            clip-path: polygon(
+                0% 100%, 
+                0% 60%, 
+                5% 60%, 
+                5% 45%, 
+                10% 45%, 
+                10% 70%, 
+                15% 70%, 
+                15% 50%, 
+                20% 50%, 
+                20% 80%, 
+                25% 80%, 
+                25% 40%, 
+                30% 40%, 
+                30% 60%, 
+                35% 60%, 
+                35% 20%, 
+                40% 20%, 
+                40% 50%, 
+                45% 50%, 
+                45% 70%, 
+                50% 70%, 
+                50% 30%, 
+                55% 30%, 
+                55% 50%, 
+                60% 50%, 
+                60% 80%, 
+                65% 80%, 
+                65% 40%, 
+                70% 40%, 
+                70% 60%, 
+                75% 60%, 
+                75% 30%, 
+                80% 30%, 
+                80% 70%, 
+                85% 70%, 
+                85% 50%, 
+                90% 50%, 
+                90% 60%, 
+                95% 60%, 
+                95% 80%, 
+                100% 80%, 
+                100% 100%
+            );
+        }
+
+        .pulse {
+            position: absolute;
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0% {
+                transform: scale(0.8);
+                opacity: 0.8;
+            }
+            50% {
+                transform: scale(1.1);
+                opacity: 0.3;
+            }
+            100% {
+                transform: scale(0.8);
+                opacity: 0.8;
+            }
+        }
+
+        .flicker-element {
+            position: absolute;
+            width: 3px;
+            height: 3px;
+            background: white;
+            border-radius: 50%;
+            animation: flicker 0.5s infinite alternate;
+        }
+
+        @keyframes flicker {
+            0% { opacity: 0.2; }
+            100% { opacity: 1; }
+        }
+
+        .loader-text {
+            color: white;
+            font-size: 28px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+            animation: textPulse 2s infinite;
+        }
+
+        @keyframes textPulse {
+            0% { opacity: 0.7; }
+            50% { opacity: 1; }
+            100% { opacity: 0.7; }
+        }
+
+        .loader-progress {
+            width: 250px;
+            height: 6px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .loader-bar {
+            height: 100%;
+            width: 0%;
+            background: white;
+            position: absolute;
+            border-radius: 3px;
+            animation: loading 3.5s forwards cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        @keyframes loading {
+            0% { width: 0%; }
+            20% { width: 20%; }
+            40% { width: 40%; }
+            60% { width: 70%; }
+            80% { width: 90%; }
+            100% { width: 100%; }
+        }
+
+        .loader-info {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-top: 15px;
+            opacity: 0;
+            animation: fadeIn 1s forwards 1s;
+        }
+
+        @keyframes fadeIn {
+            0% { opacity: 0; }
+            100% { opacity: 1; }
+        }
+
+        /* Main Dashboard Layout */
+        .layout-container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 250px;
+            background-color: var(--card-bg);
+            border-right: 1px solid var(--border-color);
+            z-index: 100;
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-header {
+            padding: 1.5rem 1rem;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .logo i {
+            font-size: 1.5rem;
+        }
+
+        .sidebar-content {
+            padding: 1rem 0;
+        }
+
+        .nav-section {
+            margin-bottom: 1.5rem;
+        }
+
+        .nav-section-title {
+            padding: 0.5rem 1.5rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--light-text);
+        }
+
+        .nav-items {
+            list-style: none;
+        }
+
+        .nav-item {
+            padding: 0.75rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            color: var(--dark-text);
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item.active {
+            background-color: rgba(26, 86, 219, 0.1);
+            color: var(--primary);
+            border-left: 3px solid var(--primary);
+        }
+
+        .nav-item:hover:not(.active) {
+            background-color: rgba(26, 86, 219, 0.05);
+        }
+
+        .nav-item i {
+            width: 20px;
+            text-align: center;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Top Navigation */
+        .top-nav {
+            height: 72px;
+            background-color: var(--card-bg);
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 50;
+        }
+
+        .menu-toggle {
+            display: none;
+            font-size: 1.5rem;
+            color: var(--dark-text);
+            cursor: pointer;
+        }
+
+        .search-bar {
+            position: relative;
+            width: 300px;
+        }
+
+        .search-bar input {
+            width: 100%;
+            padding: 0.65rem 1rem 0.65rem 2.5rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            outline: none;
+        }
+
+        .search-bar input:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.15);
+        }
+
+        .search-bar i {
+            position: absolute;
+            left: 1rem;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--light-text);
+        }
+
+        .top-nav-actions {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+        }
+
+        .nav-action {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            color: var(--dark-text);
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+        }
+
+        .nav-action:hover {
+            background-color: rgba(26, 86, 219, 0.1);
+            color: var(--primary);
+        }
+
+        .notification-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background-color: var(--danger);
+            color: white;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            font-size: 0.7rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0.5rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .user-profile:hover {
+            background-color: rgba(26, 86, 219, 0.1);
+        }
+
+        .avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background-color: var(--secondary);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 600;
+        }
+
+        .user-info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .user-role {
+            font-size: 0.8rem;
+            color: var(--light-text);
+        }
+
+        /* Dashboard Content */
+        .dashboard-content {
+            padding: 2rem;
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        .page-header {
+            margin-bottom: 2rem;
+        }
+
+        .page-title {
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .page-description {
+            color: var(--light-text);
+            font-size: 1rem;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .stat-card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1rem;
+        }
+
+        .stat-card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--light-text);
+        }
+
+        .stat-card-icon {
+            width: 42px;
+            height: 42px;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .icon-traffic {
+            background-color: rgba(126, 58, 242, 0.15);
+            color: var(--accent);
+        }
+
+        .icon-pollution {
+            background-color: rgba(224, 36, 36, 0.15);
+            color: var(--danger);
+        }
+
+        .icon-energy {
+            background-color: rgba(49, 196, 141, 0.15);
+            color: var(--success);
+        }
+
+        .icon-weather {
+            background-color: rgba(255, 90, 31, 0.15);
+            color: var(--warning);
+        }
+
+        .stat-card-value {
+            font-size: 2rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-card-change {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 0.85rem;
+        }
+
+        .change-up {
+            color: var(--danger);
+        }
+
+        .change-down {
+            color: var(--success);
+        }
+
+        /* Chart Sections */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            height: 350px;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chart-action {
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background-color: #f3f4f6;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chart-action:hover {
+            background-color: #e5e7eb;
+        }
+
+        .chart-action.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .chart-container {
+            height: calc(100% - 60px);
+            width: 100%;
+            position: relative;
+        }
+
+        /* Map Card */
+        .map-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            margin-bottom: 2rem;
+            height: 400px;
+        }
+
+        .map-container {
+            height: calc(100% - 60px);
+            width: 100%;
+            position: relative;
+            overflow: hidden;
+            border-radius: 8px;
+            background-color: #e5e7eb;
+        }
+
+        .map-placeholder {
+            height: 100%;
+            width: 100%;
+            background: linear-gradient(120deg, #e5e7eb 30%, #f3f4f6 38%, #f3f4f6 40%, #e5e7eb 48%);
+            background-size: 200% 100%;
+            background-position: 100% 0;
+            animation: load 2s infinite;
+        }
+
+        @keyframes load {
+            100% { background-position: -100% 0; }
+        }
+
+        /* Responsive */
+        @media screen and (max-width: 1200px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media screen and (max-width: 992px) {
+            .sidebar {
+                position: fixed;
+                left: -250px;
+                height: 100vh;
+            }
+
+            .sidebar.active {
+                left: 0;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media screen and (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .search-bar {
+                display: none;
+            }
+        }
+
+        /* Map overlay elements */
+        .map-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        .map-grid {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: linear-gradient(var(--border-color) 1px, transparent 1px),
+                            linear-gradient(90deg, var(--border-color) 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.3;
+        }
+
+        .traffic-hotspot {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: rgba(224, 36, 36, 0.5);
+            animation: pulse 2s infinite;
+        }
+
+        .hotspot-1 {
+            top: 30%;
+            left: 40%;
+        }
+
+        .hotspot-2 {
+            top: 60%;
+            left: 70%;
+        }
+
+        .hotspot-3 {
+            top: 20%;
+            left: 65%;
+        }
+
+        /* Road network simulation */
+        .road-horizontal {
+            position: absolute;
+            height: 10px;
+            background-color: rgba(31, 41, 55, 0.8);
+            border-radius: 5px;
+        }
+
+        .road-vertical {
+            position: absolute;
+            width: 10px;
+            background-color: rgba(31, 41, 55, 0.8);
+            border-radius: 5px;
+        }
+
+        .road-h1 {
+            top: 30%;
+            left: 10%;
+            width: 80%;
+        }
+
+        .road-h2 {
+            top: 60%;
+            left: 5%;
+            width: 90%;
+        }
+
+        .road-v1 {
+            top: 10%;
+            left: 40%;
+            height: 80%;
+        }
+
+        .road-v2 {
+            top: 20%;
+            left: 70%;
+            height: 60%;
+        }
+
+        /* Car simulation */
+        .car {
+            position: absolute;
+            width: 12px;
+            height: 6px;
+            background-color: var(--primary);
+            border-radius: 2px;
+            z-index: 5;
+        }
+
+        .car-h1 {
+            top: 32%;
+            left: 20%;
+            animation: carMoveH 15s linear infinite;
+        }
+
+        .car-h2 {
+            top: 62%;
+            left: 80%;
+            animation: carMoveH 18s linear infinite reverse;
+        }
+
+        .car-v1 {
+            top: 40%;
+            left: 42%;
+            height: 12px;
+            width: 6px;
+            animation: carMoveV 20s linear infinite;
+        }
+
+        @keyframes carMoveH {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(500px); }
+        }
+
+        @keyframes carMoveV {
+            0% { transform: translateY(0); }
+            100% { transform: translateY(200px); }
+        }
+
+        /* Table styles */
+        .table-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 1rem;
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem;
+            font-weight: 600;
+            border-bottom: 2px solid var(--border-color);
+            color: var(--dark-text);
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            color: var(--light-text);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background-color: rgba(26, 86, 219, 0.05);
+        }
+
+        .status {
+            padding: 0.3rem 0.6rem;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-align: center;
+            display: inline-block;
+            min-width: 80px;
+        }
+
+        .status-normal {
+            background-color: rgba(49, 196, 141, 0.15);
+            color: var(--success);
+        }
+
+        .status-warning {
+            background-color: rgba(255, 90, 31, 0.15);
+            color: var(--warning);
+        }
+
+        .status-danger {
+            background-color: rgba(224, 36, 36, 0.15);
+            color: var(--danger);
+        }
+
+        .footer {
+            padding: 1.5rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--light-text);
+            font-size: 0.9rem;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: 1.5rem;
+        }
+
+        .footer-links a {
+            color: var(--light-text);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .footer-links a:hover {
+            color: var(--primary);
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Screen with Flickering Effect -->
+    <div class="loader-container">
+        <div class="loader-content">
+            <div class="loader-logo">
+                <div class="pulse"></div>
+                <div class="city-silhouette"></div>
+                <!-- Dynamically generated flickering dots -->
+            </div>
+            <div class="loader-text">CityPulse</div>
+            <div class="loader-progress">
+                <div class="loader-bar"></div>
+            </div>
+            <div class="loader-info">Loading real-time city data...</div>
+        </div>
+    </div>
+
+    <!-- Main Dashboard Layout -->
+    <div class="layout-container">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-city"></i>
+                    <span>CityPulse</span>
+                </div>
+            </div>
+            <div class="sidebar-content">
+                <div class="nav-section">
+                    <div class="nav-section-title">Monitoring</div>
+                    <ul class="nav-items">
+                        <li class="nav-item active" >
+                            <i class="fas fa-chart-line"></i>
+                            <span>Dashboard</span>
+                        </li>
+                        <a href="./Traffic.html"style="text-decoration: none" >
+                        <li class="nav-item" >
+                            <i class="fas fa-car"></i>
+                            <span>Traffic</span>
+                        </li>
+                    </a>
+
+                    <a href="./pollution.html" style="text-decoration: none">
+                        <li class="nav-item">
+                            <i class="fas fa-cloud"></i>
+                            <span>Pollution</span>
+                        </li>
+                    </a>
+
+                    <a href="./energy.html" style="text-decoration: none">
+                        <li class="nav-item">
+                            <i class="fas fa-bolt"></i>
+                            <span>Energy</span>
+                        </li>
+                    </a>
+
+                    <a href="./City.html"  style="text-decoration: none">
+                        <li class="nav-item">
+                            <i class="fas fa-map-marked-alt"></i>
+                            <span>City Map</span>
+                        </li>
+                    </a>
+
+
+                    </ul>
+
+
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+                    <ul class="nav-items">
+                        <li class="nav-item">
+                            <i class="fas fa-chart-pie"></i>
+                            <span>Reports</span>
+                        </li>
+                        <li class="nav-item">
+                            <i class="fas fa-bell"></i>
+                            <span>Alerts</span>
+                        </li>
+                        <li class="nav-item">
+                            <i class="fas fa-clipboard-list"></i>
+                            <span>Logs</span>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-section">
+                    <div class="nav-section-title">Settings</div>
+                    <ul class="nav-items">
+                        <li class="nav-item">
+                            <i class="fas fa-cog"></i>
+                            <span>Preferences</span>
+                        </li>
+                        <li class="nav-item">
+                            <i class="fas fa-users"></i>
+                            <span>User Access</span>
+                        </li>
+                        <li class="nav-item">
+                            <i class="fas fa-question-circle"></i>
+                            <span>Help</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <div class="main-content">
+            <!-- Top Navigation -->
+            <div class="top-nav">
+                <div class="menu-toggle" id="menu-toggle">
+                    <i class="fas fa-bars"></i>
+                </div>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search...">
+                </div>
+                <div class="top-nav-actions">
+                    <div class="nav-action">
+                        <i class="fas fa-bell"></i>
+                        <div class="notification-badge">3</div>
+                    </div>
+                    <div class="nav-action">
+                        <i class="fas fa-envelope"></i>
+                        <div class="notification-badge">5</div>
+                    </div>
+                    <div class="user-profile">
+                        <div class="avatar">AD</div>
+                        <div class="user-info">
+                            <div class="user-name">ANONYMOUS</div>
+                            <div class="user-role">Administrator</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Dashboard Content -->
+            <div class="dashboard-content">
+                <div class="page-header">
+                    <h1 class="page-title">Smart City & IoT Dashboards</h1>
+                    <p class="page-description">Real-time overview of traffic, pollution, and energy consumption.</p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">Traffic Density</div>
+                            <div class="stat-card-icon icon-traffic">
+                                <i class="fas fa-car"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card-value">78%</div>
+                        <div class="stat-card-change change-up">
+                            <i class="fas fa-arrow-up"></i>
+                            12% since last hour
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">Air Quality Index</div>
+                            <div class="stat-card-icon icon-pollution">
+                                <i class="fas fa-cloud"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card-value">134</div>
+                        <div class="stat-card-change change-up">
+                            <i class="fas fa-arrow-up"></i>
+                            8% since yesterday
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">Energy Consumption</div>
+                            <div class="stat-card-icon icon-energy">
+                                <i class="fas fa-bolt"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card-value">3.2 MW</div>
+                        <div class="stat-card-change change-down">
+                            <i class="fas fa-arrow-down"></i>
+                            5% since last hour
+                        </div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-card-header">
+                            <div class="stat-card-title">Weather Conditions</div>
+                            <div class="stat-card-icon icon-weather">
+                                <i class="fas fa-cloud-sun"></i>
+                            </div>
+                        </div>
+                        <div class="stat-card-value">72°F</div>
+                        <div class="stat-card-change">
+                            <i class="fas fa-check-circle"></i>
+                            Clear skies
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Map Card -->
+                <div class="map-card">
+                    <div class="chart-header">
+                        <div class="chart-title">City Traffic Map</div>
+                        <div class="chart-actions">
+                            <div class="chart-action active">Traffic</div>
+                            <div class="chart-action">Pollution</div>
+                            <div class="chart-action">Energy</div>
+                        </div>
+                    </div>
+                    <div class="map-container">
+                        <div class="map-overlay">
+                            <div class="map-grid"></div>
+                            <!-- Road Network -->
+                            <div class="road-horizontal road-h1"></div>
+                            <div class="road-horizontal road-h2"></div>
+                            <div class="road-vertical road-v1"></div>
+                            <div class="road-vertical road-v2"></div>
+                            <!-- Traffic Hotspots -->
+                            <div class="traffic-hotspot hotspot-1"></div>
+                            <div class="traffic-hotspot hotspot-2"></div>
+                            <div class="traffic-hotspot hotspot-3"></div>
+                            <!-- Cars -->
+                            <div class="car car-h1"></div>
+                            <div class="car car-h2"></div>
+                            <div class="car car-v1"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chart Sections -->
+                <div class="charts-grid">
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Traffic Trends</div>
+                            <div class="chart-actions">
+                                <div class="chart-action active">Daily</div>
+                                <div class="chart-action">Weekly</div>
+                                <div class="chart-action">Monthly</div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="trafficChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card">
+                        <div class="chart-header">
+                            <div class="chart-title">Pollution Levels</div>
+                            <div class="chart-actions">
+                                <div class="chart-action active">Air Quality</div>
+                                <div class="chart-action">Noise</div>
+                                <div class="chart-action">Water</div>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="pollutionChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Energy Consumption Chart -->
+                <div class="chart-card" style="margin-bottom: 2rem;">
+                    <div class="chart-header">
+                        <div class="chart-title">Energy Consumption by District</div>
+                        <div class="chart-actions">
+                            <div class="chart-action active">Today</div>
+                            <div class="chart-action">This Week</div>
+                            <div class="chart-action">This Month</div>
+                        </div>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="energyChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Recent Alerts Table -->
+                <div class="table-card">
+                    <div class="chart-header">
+                        <div class="chart-title">Recent Alerts</div>
+                        <div class="chart-actions">
+                            <div class="chart-action active">All</div>
+                            <div class="chart-action">Critical</div>
+                            <div class="chart-action">Warnings</div>
+                        </div>
+                    </div>
+                    <div class="table-container">
+                        <table>
+                            <thead>
+                                <tr>
+                                    <th>Location</th>
+                                    <th>Type</th>
+                                    <th>Status</th>
+                                    <th>Time</th>
+                                    <th>Details</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Downtown Junction</td>
+                                    <td>Traffic Congestion</td>
+                                    <td><span class="status status-danger">Critical</span></td>
+                                    <td>10:23 AM</td>
+                                    <td>Heavy traffic, estimated delay 45 mins</td>
+                                </tr>
+                                <tr>
+                                    <td>Industrial Zone</td>
+                                    <td>Air Quality</td>
+                                    <td><span class="status status-warning">Warning</span></td>
+                                    <td>9:15 AM</td>
+                                    <td>PM2.5 levels above threshold</td>
+                                </tr>
+                                <tr>
+                                    <td>North District</td>
+                                    <td>Power Grid</td>
+                                    <td><span class="status status-normal">Normal</span></td>
+                                    <td>8:40 AM</td>
+                                    <td>Maintenance completed successfully</td>
+                                </tr>
+                                <tr>
+                                    <td>Central Park</td>
+                                    <td>Water Quality</td>
+                                    <td><span class="status status-warning">Warning</span></td>
+                                    <td>8:32 AM</td>
+                                    <td>Elevated levels of contaminants</td>
+                                </tr>
+                                <tr>
+                                    <td>East Bridge</td>
+                                    <td>Traffic Flow</td>
+                                    <td><span class="status status-normal">Normal</span></td>
+                                    <td>8:05 AM</td>
+                                    <td>Traffic flow restored after incident</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="copyright">
+                    &copy; 2025 CityPulse Dashboard. All rights reserved.
+                </div>
+                <div class="footer-links">
+                    <a href="#">Privacy Policy</a>
+                    <a href="#">Terms of Service</a>
+                    <a href="#">Contact Us</a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Loading Screen Animation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Create flickering elements
+            const logoElement = document.querySelector('.loader-logo');
+            for (let i = 0; i < 20; i++) {
+                const flickerDot = document.createElement('div');
+                flickerDot.className = 'flicker-element';
+                flickerDot.style.top = Math.random() * 150 + 'px';
+                flickerDot.style.left = Math.random() * 150 + 'px';
+                flickerDot.style.animationDelay = Math.random() * 0.5 + 's';
+                flickerDot.style.opacity = Math.random() * 0.5 + 0.5;
+                logoElement.appendChild(flickerDot);
+            }
+            
+            // Hide loader after animation completes
+            setTimeout(() => {
+                const loaderContainer = document.querySelector('.loader-container');
+                loaderContainer.style.opacity = '0';
+                setTimeout(() => {
+                    loaderContainer.style.display = 'none';
+                    initCharts(); // Initialize charts after loader disappears
+                }, 500);
+            }, 3500);
+            
+            // Mobile menu toggle
+            const menuToggle = document.getElementById('menu-toggle');
+            const sidebar = document.getElementById('sidebar');
+            menuToggle.addEventListener('click', function() {
+                sidebar.classList.toggle('active');
+            });
+        });
+        
+        // Initialize Charts
+        function initCharts() {
+            // Traffic Chart
+            const trafficCanvas = document.getElementById('trafficChart');
+            const trafficChart = new Chart(trafficCanvas, {
+                type: 'line',
+                data: {
+                    labels: ['6AM', '8AM', '10AM', '12PM', '2PM', '4PM', '6PM', '8PM'],
+                    datasets: [{
+                        label: 'Downtown',
+                        data: [25, 65, 75, 50, 60, 80, 95, 60],
+                        borderColor: '#7e3af2',
+                        backgroundColor: 'rgba(126, 58, 242, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Residential Areas',
+                        data: [45, 30, 20, 35, 40, 55, 85, 50],
+                        borderColor: '#0694a2',
+                        backgroundColor: 'rgba(6, 148, 162, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            title: {
+                                display: true,
+                                text: 'Traffic Density (%)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Pollution Chart
+            const pollutionCanvas = document.getElementById('pollutionChart');
+            const pollutionChart = new Chart(pollutionCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Downtown', 'Industrial', 'Residential', 'Commercial', 'Parks'],
+                    datasets: [{
+                        label: 'AQI Levels',
+                        data: [145, 210, 95, 130, 85],
+                        backgroundColor: [
+                            'rgba(224, 36, 36, 0.7)',
+                            'rgba(224, 36, 36, 0.9)',
+                            'rgba(255, 90, 31, 0.7)',
+                            'rgba(224, 36, 36, 0.6)',
+                            'rgba(49, 196, 141, 0.7)'
+                        ],
+                        borderColor: [
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(255, 90, 31, 1)',
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(49, 196, 141, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Air Quality Index'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Energy Chart
+            const energyCanvas = document.getElementById('energyChart');
+            const energyChart = new Chart(energyCanvas, {
+                type: 'line',
+                data: {
+                    labels: ['12AM', '3AM', '6AM', '9AM', '12PM', '3PM', '6PM', '9PM'],
+                    datasets: [{
+                        label: 'Residential',
+                        data: [1.2, 0.8, 1.0, 1.5, 1.2, 1.3, 2.5, 2.8],
+                        borderColor: '#31c48d',
+                        backgroundColor: 'rgba(49, 196, 141, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Commercial',
+                        data: [2.5, 1.5, 1.0, 3.2, 3.5, 3.2, 2.8, 2.0],
+                        borderColor: '#ff5a1f',
+                        backgroundColor: 'rgba(255, 90, 31, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }, {
+                        label: 'Industrial',
+                        data: [3.2, 2.8, 2.5, 4.0, 4.5, 4.2, 3.8, 3.0],
+                        borderColor: '#1a56db',
+                        backgroundColor: 'rgba(26, 86, 219, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Energy (MW)'
+                            }
+                        }
+                    }
+                }
+            });
+            
+            // Simulate real-time data updates
+            setInterval(() => {
+                // Update traffic chart with new data
+                trafficChart.data.datasets[0].data = trafficChart.data.datasets[0].data.map(val => 
+                    Math.max(20, Math.min(100, val + (Math.random() * 10 - 5)))
+                );
+                trafficChart.data.datasets[1].data = trafficChart.data.datasets[1].data.map(val => 
+                    Math.max(20, Math.min(100, val + (Math.random() * 10 - 5)))
+                );
+                trafficChart.update();
+                
+                // Simulate hotspots pulsing randomly
+                document.querySelectorAll('.traffic-hotspot').forEach(hotspot => {
+                    const size = 20 + Math.random() * 20;
+                    hotspot.style.width = size + 'px';
+                    hotspot.style.height = size + 'px';
+                    hotspot.style.opacity = 0.3 + Math.random() * 0.7;
+                });
+            }, 3000);
+        }
+    </script>
+</body>
+</html>
