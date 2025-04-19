@@ -1,983 +1,348 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PollutionSense - Urban Air Quality Monitoring</title>
-  <style>
-    :root {
-      --primary: #10b981;
-      --primary-dark: #059669;
-      --secondary: #3b82f6;
-      --accent: #8b5cf6;
-      --warning: #f59e0b;
-      --danger: #ef4444;
-      --light: #f9fafb;
-      --dark: #111827;
-      --gray: #6b7280;
-      --bg: #f3f4f6;
-      --shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
-    }
-    
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    }
-    
-    body {
-      background-color: var(--bg);
-      color: var(--dark);
-      overflow-x: hidden;
-    }
-    
-    .container {
-      display: grid;
-      grid-template-columns: 280px 1fr;
-      min-height: 100vh;
-    }
-    
-    /* Sidebar */
-    .sidebar {
-      background: var(--dark);
-      color: white;
-      padding: 1.5rem 1rem;
-      display: flex;
-      flex-direction: column;
-      transition: all 0.3s ease;
-      z-index: 10;
-    }
-    
-    .logo {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.5rem 0 1.5rem;
-      margin-bottom: 2rem;
-      font-size: 1.5rem;
-      font-weight: 700;
-      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    }
-    
-    .logo-icon {
-      color: var(--primary);
-      font-size: 1.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-    
-    .nav-links {
-      display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
-    }
-    
-    .nav-section {
-      margin-bottom: 1.5rem;
-    }
-    
-    .nav-section-title {
-      font-size: 0.75rem;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: rgba(255, 255, 255, 0.5);
-      padding: 0 0.75rem;
-      margin-bottom: 0.75rem;
-    }
-    
-    .nav-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.75rem 1rem;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      color: rgba(255, 255, 255, 0.8);
-      position: relative;
-    }
-    
-    .nav-item:hover {
-      background: rgba(255, 255, 255, 0.08);
-      color: white;
-    }
-    
-    .nav-item.active {
-      background: var(--primary);
-      color: white;
-      font-weight: 500;
-    }
-    
-    .sidebar-footer {
-      margin-top: auto;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      padding-top: 1rem;
-    }
-    
-    /* Main Content */
-    .main {
-      padding: 1.5rem 2rem;
-      overflow-y: auto;
-    }
-    
-    .header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
-    
-    .page-title {
-      font-size: 1.75rem;
-      font-weight: 600;
-      color: var(--dark);
-    }
-    
-    .breadcrumb {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--gray);
-      font-size: 0.875rem;
-      margin-bottom: 0.5rem;
-    }
-    
-    .header-actions {
-      display: flex;
-      gap: 1rem;
-      align-items: center;
-    }
-    
-    .search-box {
-      position: relative;
-    }
-    
-    .search-input {
-      padding: 0.75rem 1rem 0.75rem 2.5rem;
-      background: white;
-      border: 1px solid rgba(107, 114, 128, 0.2);
-      border-radius: 8px;
-      width: 280px;
-      font-size: 0.875rem;
-      transition: all 0.2s ease;
-    }
-    
-    .search-input:focus {
-      outline: none;
-      border-color: var(--primary);
-      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
-    }
-    
-    .search-icon {
-      position: absolute;
-      left: 0.75rem;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--gray);
-    }
-    
-    .profile {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      cursor: pointer;
-      padding: 0.5rem;
-      border-radius: 8px;
-      transition: all 0.2s ease;
-    }
-    
-    .profile:hover {
-      background: rgba(17, 24, 39, 0.05);
-    }
-    
-    .profile-img {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      background: var(--primary);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 500;
-      font-size: 1rem;
-    }
-    
-    /* City Selection */
-    .city-selection {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 2rem;
-      overflow-x: auto;
-      padding: 0.5rem 0;
-      scrollbar-width: none;
-    }
-    
-    .city-selection::-webkit-scrollbar {
-      display: none;
-    }
-    
-    .city-card {
-      min-width: 200px;
-      background: white;
-      border-radius: 12px;
-      padding: 1rem;
-      box-shadow: var(--shadow);
-      cursor: pointer;
-      transition: all 0.3s ease;
-      border: 2px solid transparent;
-      position: relative;
-    }
-    
-    .city-card:hover {
-      transform: translateY(-5px);
-    }
-    
-    .city-card.active {
-      border-color: var(--primary);
-    }
-    
-    .aqi-badge {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      width: 36px;
-      height: 36px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: white;
-      font-weight: 600;
-      font-size: 0.875rem;
-    }
-    
-    .aqi-good {
-      background: #10b981;
-    }
-    
-    .aqi-moderate {
-      background: #f59e0b;
-    }
-    
-    .aqi-unhealthy {
-      background: #ef4444;
-    }
-    
-    .city-image {
-      height: 80px;
-      width: 100%;
-      border-radius: 8px;
-      background: var(--bg);
-      margin-bottom: 0.75rem;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--primary);
-      font-size: 2rem;
-      overflow: hidden;
-    }
-    
-    .city-name {
-      font-weight: 600;
-      margin-bottom: 0.25rem;
-    }
-    
-    .city-info {
-      font-size: 0.75rem;
-      color: var(--gray);
-    }
-    
-    /* Dashboard Grid */
-    .dashboard {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    
-    .card {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      transition: all 0.3s ease;
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .card:hover {
-      transform: translateY(-5px);
-      box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
-    }
-    
-    .card-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      margin-bottom: 1.5rem;
-    }
-    
-    .card-icon {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      background: rgba(16, 185, 129, 0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: var(--primary);
-      font-size: 1.5rem;
-    }
-    
-    .pm-icon {
-      background: rgba(59, 130, 246, 0.1);
-      color: var(--secondary);
-    }
-    
-    .o3-icon {
-      background: rgba(139, 92, 246, 0.1);
-      color: var(--accent);
-    }
-    
-    .co-icon {
-      background: rgba(245, 158, 11, 0.1);
-      color: var(--warning);
-    }
-    
-    .no2-icon {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
-    }
-    
-    .card-title {
-      font-size: 1rem;
-      color: var(--gray);
-      margin-bottom: 0.25rem;
-    }
-    
-    .card-value {
-      font-size: 2rem;
-      font-weight: 700;
-      margin-bottom: 0.75rem;
-    }
-    
-    .card-unit {
-      font-size: 1rem;
-      font-weight: normal;
-      color: var(--gray);
-    }
-    
-    .card-footer {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.875rem;
-      margin-top: auto;
-      padding-top: 1rem;
-      border-top: 1px solid rgba(107, 114, 128, 0.1);
-    }
-    
-    .card-status {
-      padding: 0.25rem 0.5rem;
-      border-radius: 9999px;
-      font-size: 0.75rem;
-      font-weight: 500;
-    }
-    
-    .status-good {
-      background: rgba(16, 185, 129, 0.1);
-      color: var(--primary);
-    }
-    
-    .status-moderate {
-      background: rgba(245, 158, 11, 0.1);
-      color: var(--warning);
-    }
-    
-    .status-unhealthy {
-      background: rgba(239, 68, 68, 0.1);
-      color: var(--danger);
-    }
-    
-    /* Chart Containers */
-    .chart-container {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      margin-bottom: 2rem;
-      overflow: hidden;
-      position: relative;
-    }
-    
-    .chart-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1.5rem;
-    }
-    
-    .chart-title {
-      font-size: 1.25rem;
-      font-weight: 600;
-    }
-    
-    .chart-actions {
-      display: flex;
-      gap: 0.5rem;
-    }
-    
-    .tabs {
-      display: flex;
-      gap: 1rem;
-      margin-bottom: 1.5rem;
-      border-bottom: 1px solid rgba(107, 114, 128, 0.1);
-      padding-bottom: 0.5rem;
-    }
-    
-    .tab {
-      padding: 0.5rem 0;
-      cursor: pointer;
-      position: relative;
-      color: var(--gray);
-      font-weight: 500;
-      transition: all 0.2s ease;
-    }
-    
-    .tab:hover {
-      color: var(--dark);
-    }
-    
-    .tab.active {
-      color: var(--primary);
-    }
-    
-    .tab.active::after {
-      content: '';
-      position: absolute;
-      bottom: -0.5rem;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background: var(--primary);
-      border-radius: 2px;
-    }
-    
-    /* Map Container */
-    .map-section {
-      display: grid;
-      grid-template-columns: 1fr 300px;
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-    
-    .map-container {
-      background: white;
-      border-radius: 16px;
-      overflow: hidden;
-      box-shadow: var(--shadow);
-      height: 400px;
-      position: relative;
-    }
-    
-    .map-overlay {
-      position: absolute;
-      bottom: 1.5rem;
-      left: 1.5rem;
-      background: white;
-      padding: 1rem;
-      border-radius: 12px;
-      box-shadow: var(--shadow);
-      width: 200px;
-    }
-    
-    .map-overlay-title {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-    
-    .map-legend {
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-    
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.75rem;
-    }
-    
-    .legend-color {
-      width: 16px;
-      height: 16px;
-      border-radius: 4px;
-    }
-    
-    .hotspots {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      display: flex;
-      flex-direction: column;
-    }
-    
-    .hotspot-title {
-      font-size: 1.125rem;
-      font-weight: 600;
-      margin-bottom: 1rem;
-    }
-    
-    .hotspot-list {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      overflow-y: auto;
-      flex: 1;
-    }
-    
-    .hotspot-item {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-      padding: 0.75rem;
-      border-radius: 12px;
-      background: var(--bg);
-      transition: all 0.2s ease;
-      cursor: pointer;
-    }
-    
-    .hotspot-item:hover {
-      background: rgba(16, 185, 129, 0.1);
-    }
-    
-    .hotspot-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      background: white;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 1.25rem;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-    }
-    
-    .hotspot-info {
-      flex: 1;
-    }
-    
-    .hotspot-location {
-      font-weight: 500;
-      margin-bottom: 0.25rem;
-    }
-    
-    .hotspot-status {
-      font-size: 0.75rem;
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-    }
-    
-    /* Buttons */
-    .btn {
-      padding: 0.75rem 1.25rem;
-      border-radius: 8px;
-      border: none;
-      font-weight: 500;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      transition: all 0.2s ease;
-      font-size: 0.875rem;
-    }
-    
-    .btn-primary {
-      background: var(--primary);
-      color: white;
-    }
-    
-    .btn-primary:hover {
-      background: var(--primary-dark);
-    }
-    
-    .btn-outline {
-      background: transparent;
-      border: 1px solid rgba(107, 114, 128, 0.3);
-      color: var(--gray);
-    }
-    
-    .btn-outline:hover {
-      border-color: var(--gray);
-      color: var(--dark);
-    }
-    
-    .btn-icon {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      padding: 0;
-      border-radius: 8px;
-    }
-    
-    /* Data Table */
-    .historical-data {
-      background: white;
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: var(--shadow);
-      margin-bottom: 2rem;
-    }
-    
-    .data-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.875rem;
-    }
-    
-    .data-table th {
-      text-align: left;
-      padding: 1rem;
-      border-bottom: 1px solid rgba(107, 114, 128, 0.1);
-      color: var(--gray);
-      font-weight: 500;
-    }
-    
-    .data-table td {
-      padding: 1rem;
-      border-bottom: 1px solid rgba(107, 114, 128, 0.1);
-    }
-    
-    .data-table tr:last-child td {
-      border-bottom: none;
-    }
-    
-    .data-table tr:hover {
-      background: rgba(243, 244, 246, 0.5);
-    }
-    
-    /* Responsive */
-    @media (max-width: 1024px) {
-      .container {
-        grid-template-columns: 64px 1fr;
-      }
-      
-      .sidebar {
-        padding: 1.5rem 0.5rem;
-      }
-      
-      .logo span, .nav-item span, .nav-section-title {
-        display: none;
-      }
-      
-      .logo {
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pollution Levels by State</title>
+    <!-- Include Chart.js from CDN -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css" integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <style>
+        :root {
+            --primary: #1a56db;
+            --danger: #e02424;
+            --warning: #ff5a1f;
+            --success: #31c48d;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding: 20px;
+            background-color: #f9fafb;
+        }
+        
+        .chart-card {
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            height: 350px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .chart-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chart-action {
+            padding: 0.4rem 0.75rem;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            background-color: #f3f4f6;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chart-action:hover {
+            background-color: #e5e7eb;
+        }
+
+        .chart-action.active {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .chart-container {
+            height: calc(100% - 60px);
+            width: 100%;
+            position: relative;
+        }
+
+      .back{
+        height: 30px;
+        width: 70px;
+        display: flex;
         justify-content: center;
+        align-items: center;
+        margin-left: 20px;
+        
       }
-      
-      .nav-item {
-        justify-content: center;
-        padding: 0.75rem;
+
+      .back:hover{
+        background-color: #1a56db;
+        color: #ffffff;
+        cursor: pointer;
       }
-      
-      .map-section {
-        grid-template-columns: 1fr;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      .dashboard {
-        grid-template-columns: 1fr;
-      }
-      
-      .search-input {
-        width: 180px;
-      }
-      
-      .map-section {
-        grid-template-columns: 1fr;
-      }
-      
-      .map-container {
-        height: 300px;
-      }
-    }
-    
-    /* Animations */
-    @keyframes pulse {
-      0% { transform: scale(1); }
-      50% { transform: scale(1.02); }
-      100% { transform: scale(1); }
-    }
-    
-    .pulse {
-      animation: pulse 2s infinite ease-in-out;
-    }
-    
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .fade-in {
-      animation: fadeIn 0.5s ease-out forwards;
-    }
-  </style>
+
+    </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Sidebar -->
-    <aside class="sidebar">
-      <div class="logo">
-        <div class="logo-icon">🌬️</div>
-        <span>PollutionSense</span>
-      </div>
-      
-      <div class="nav-section">
-        <div class="nav-section-title">Monitor</div>
-        <nav class="nav-links">
-          <div class="nav-item active">
-            <div>📊</div>
-            <span>Dashboard</span>
-          </div>
-          <div class="nav-item">
-            <div>🗺️</div>
-            <span>City Map</span>
-          </div>
-          <div class="nav-item">
-            <div>🏢</div>
-            <span>Districts</span>
-          </div>
-          <div class="nav-item">
-            <div>📱</div>
-            <span>Sensors</span>
-          </div>
-        </nav>
-      </div>
-      
-      <div class="nav-section">
-        <div class="nav-section-title">Analysis</div>
-        <nav class="nav-links">
-          <div class="nav-item">
-            <div>📈</div>
-            <span>Trends</span>
-          </div>
-          <div class="nav-item">
-            <div>📑</div>
-            <span>Reports</span>
-          </div>
-          <div class="nav-item">
-            <div>🔔</div>
-            <span>Alerts</span>
-          </div>
-        </nav>
-      </div>
-      
-      <div class="nav-section">
-        <div class="nav-section-title">Settings</div>
-        <nav class="nav-links">
-          <div class="nav-item">
-            <div>⚙️</div>
-            <span>Settings</span>
-          </div>
-          <div class="nav-item">
-            <div>👥</div>
-            <span>Team</span>
-          </div>
-          <div class="nav-item">
-            <div>❓</div>
-            <span>Help</span>
-          </div>
-        </nav>
-      </div>
-      
-      <div class="sidebar-footer">
-        <div class="nav-item">
-          <div>🚪</div>
-          <span>Log Out</span>
-        </div>
-      </div>
-    </aside>
+
     
-    <!-- Main Content -->
-    <main class="main">
-      <div class="header">
-        <div>
-          <div class="breadcrumb">
-            <span>Monitor</span>
-            <span>›</span>
-            <span>Dashboard</span>
-          </div>
-          <h1 class="page-title">City Pollution Monitoring</h1>
-        </div>
-        
-        <div class="header-actions">
-          <div class="search-box">
-            <div class="search-icon">🔍</div>
-            <input type="text" class="search-input" placeholder="Search areas, pollutants...">
-          </div>
-          
-          <button class="btn btn-outline">
-            <span>📅</span>
-            <span>Last 24 Hours</span>
-          </button>
-          
-          <div class="profile">
-            <div class="profile-img">E</div>
-            <span>Env Officer</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- City Selection -->
-      <div class="city-selection">
-        <div class="city-card active">
-          <div class="aqi-badge aqi-moderate">56</div>
-          <div class="city-image">🏙️</div>
-          <div class="city-name">Los Angeles</div>
-          <div class="city-info">Moderate air quality today</div>
-        </div>
-        
-        <div class="city-card">
-          <div class="aqi-badge aqi-good">32</div>
-          <div class="city-image">🌁</div>
-          <div class="city-name">San Francisco</div>
-          <div class="city-info">Good air quality today</div>
-        </div>
-        
-        <div class="city-card">
-          <div class="aqi-badge aqi-unhealthy">98</div>
-          <div class="city-image">🌆</div>
-          <div class="city-name">New Delhi</div>
-          <div class="city-info">Unhealthy air quality today</div>
-        </div>
-        
-        <div class="city-card">
-          <div class="aqi-badge aqi-good">42</div>
-          <div class="city-image">🏝️</div>
-          <div class="city-name">Singapore</div>
-          <div class="city-info">Good air quality today</div>
-        </div>
-        
-        <div class="city-card">
-          <div class="aqi-badge aqi-moderate">68</div>
-          <div class="city-image">🌇</div>
-          <div class="city-name">Mexico City</div>
-          <div class="city-info">Moderate air quality today</div>
-        </div>
-      </div>
-      
-      <!-- Dashboard Summary Cards -->
-      <div class="dashboard">
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Air Quality Index</div>
-              <div class="card-value">56</div>
+        <a href="index.html" style="text-decoration: none;">
+            <div class="back">
+                <i class="fa-solid fa-backward-step"></i> &nbsp; <span>Back</span>
             </div>
-            <div class="card-icon">🌬️</div>
-          </div>
-          <div class="card-footer">
-            <div class="card-status status-moderate">Moderate</div>
-            <span>May affect sensitive groups</span>
-          </div>
-        </div>
-        
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">PM2.5</div>
-              <div class="card-value">18.2 <span class="card-unit">μg/m³</span></div>
-            </div>
-            <div class="card-icon pm-icon">💨</div>
-          </div>
-          <div class="card-footer">
-            <div class="card-status status-moderate">Moderate</div>
-            <span>12% above standard</span>
-          </div>
-        </div>
-        
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Ozone (O₃)</div>
-              <div class="card-value">42 <span class="card-unit">ppb</span></div>
-            </div>
-            <div class="card-icon o3-icon">🌡️</div>
-          </div>
-          <div class="card-footer">
-            <div class="card-status status-good">Good</div>
-            <span>Within healthy limits</span>
-          </div>
-        </div>
-        
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Carbon Monoxide</div>
-              <div class="card-value">0.9 <span class="card-unit">ppm</span></div>
-            </div>
-            <div class="card-icon co-icon">🚗</div>
-          </div>
-          <div class="card-footer">
-            <div class="card-status status-good">Good</div>
-            <span>Within healthy limits</span>
-          </div>
-        </div>
-        
-        <div class="card">
-          <div class="card-header">
-            <div>
-              <div class="card-title">Nitrogen Dioxide</div>
-              <div class="card-value">65 <span class="card-unit">ppb</span></div>
-            </div>
-            <div class="card-icon no2-icon">🏭</div>
-          </div>
-          <div class="card-footer">
-            <div class="card-status status-unhealthy">Unhealthy</div>
-            <span>30% above standard</span>
-          </div>
-        </div>
-      </div>
-      
-      <!-- Pollution Charts -->
-      <div class="chart-container">
+         </a>
+   
+
+
+  <div class="header" style="text-align: center;">
+    <h1 class="title">Pollution Levels Across Indian States</h1>
+    <p class="subtitle"> overview of Air-quality, Water, Soil</p>
+  </div>
+
+
+
+    <div class="chart-card">
         <div class="chart-header">
-          <h2 class="chart-title">Pollution Trends</h2>
-          
-          <div class="chart-actions">
-            <button class="btn btn-outline" id="day-btn">24h</button>
-            <button class="btn btn-primary" id="week-btn">Week</button>
-            <button class="btn btn-outline" id="month-btn">Month</button>
-            <button class="btn btn-outline" id="year-btn">Year</button>
-          </div>
+            <div class="chart-title">Pollution Levels by State</div>
+            <div class="chart-actions">
+                <div class="chart-action active">Air Quality</div>
+                <div class="chart-action">Water</div>
+                <div class="chart-action">Soil</div>
+            </div>
         </div>
-        
-        <div class="tabs">
-          <div class="tab active">All Pollutants</div>
-          <div class="tab">PM2.5</div>
-          <div class="tab">O₃</div>
-          <div class="tab">CO</div>
-          <div class="tab">NO₂</div>
+        <div class="chart-container">
+            <canvas id="pollutionChart"></canvas>
         </div>
-        
-        <div id="pollution-chart" style="height: 320px; position: relative;">
-          <!-- SVG Chart Placeholder -->
-          <svg width="100%" height="100%" viewBox="0 0 800 320" preserveAspectRatio="none">
-            <!-- Grid Lines -->
-            <line x1="0" y1="0" x2="0" y2="320" stroke="#e5e7eb" stroke-width="1"/>
-            <line x1="0" y1="0" x2="800" y2="0" stroke="#e5e7eb" stroke-width="1"/>
-            <line x1="0" y1="80" x2="800" y2="80" stroke="#e5e7eb" stroke-width="1"/>
-            <line x1="0" y1="160" x2="800" y2="160" stroke="#e5e7eb" stroke-width="1"/>
-            <line x1="0" y1="240" x2="800" y2="240" stroke="#e5e7eb" stroke-width="1"/>
-            <line x1="0" y1="320" x2="800" y2="320" stroke="#e5e7eb" stroke-width="1"/>
-            
-            <!-- PM2.5 Line -->
-            <path d="M0,140 C50,150 100,160 150,130 S250,90 300,110 S350,150 400,
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Initialize the Pollution Chart
+            const pollutionCanvas = document.getElementById('pollutionChart');
+            const pollutionChart = new Chart(pollutionCanvas, {
+                type: 'bar',
+                data: {
+                    labels: ['Kerala', 'Chennai', 'Maharashtra', 'Delhi', 'Mumbai', 'Goa', 'Odisha', 'Gujarat'],
+                    datasets: [{
+                        label: 'Air Quality Index (AQI)',
+                        data: [145, 125, 160, 110, 130, 95, 115, 105],
+                        backgroundColor: [
+                            'rgba(224, 36, 36, 0.7)',  // Danger - High
+                            'rgba(224, 36, 36, 0.6)',  // Danger - Medium-High
+                            'rgba(224, 36, 36, 0.8)',  // Danger - Very High
+                            'rgba(255, 90, 31, 0.7)',  // Warning - Moderate
+                            'rgba(224, 36, 36, 0.6)',  // Danger - Medium-High
+                            'rgba(49, 196, 141, 0.7)', // Success - Good
+                            'rgba(255, 90, 31, 0.7)',  // Warning - Moderate
+                            'rgba(255, 90, 31, 0.6)'   // Warning - Low-Moderate
+                        ],
+                        borderColor: [
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(255, 90, 31, 1)',
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(49, 196, 141, 1)',
+                            'rgba(255, 90, 31, 1)',
+                            'rgba(255, 90, 31, 1)'
+                        ],
+                        borderWidth: 1
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let value = context.raw;
+                                    let quality = "";
+                                    
+                                    if (value < 50) quality = "Good";
+                                    else if (value < 100) quality = "Moderate";
+                                    else if (value < 150) quality = "Unhealthy for Sensitive Groups";
+                                    else if (value < 200) quality = "Unhealthy";
+                                    else if (value < 300) quality = "Very Unhealthy";
+                                    else quality = "Hazardous";
+                                    
+                                    return `AQI: ${value} (${quality})`;
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            title: {
+                                display: true,
+                                text: 'Air Quality Index (AQI)'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value;
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Chart action buttons functionality
+            document.querySelectorAll('.chart-action').forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    document.querySelectorAll('.chart-action').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Update chart data based on selected pollution type
+                    if (this.textContent === 'Air Quality') {
+                        pollutionChart.data.datasets[0].label = 'Air Quality Index (AQI)';
+                        pollutionChart.data.datasets[0].data = [145, 125, 160, 110, 130, 95, 115, 105];
+                        pollutionChart.options.scales.y.title.text = 'Air Quality Index (AQI)';
+                        
+                        // Update colors based on AQI values
+                        pollutionChart.data.datasets[0].backgroundColor = [
+                            'rgba(224, 36, 36, 0.7)',  // CA
+                            'rgba(224, 36, 36, 0.6)',  // NY
+                            'rgba(224, 36, 36, 0.8)',  // TX
+                            'rgba(255, 90, 31, 0.7)',  // FL
+                            'rgba(224, 36, 36, 0.6)',  // IL
+                            'rgba(49, 196, 141, 0.7)', // PA
+                            'rgba(255, 90, 31, 0.7)',  // OH
+                            'rgba(255, 90, 31, 0.6)'   // MI
+                        ];
+                        
+                        pollutionChart.data.datasets[0].borderColor = [
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(255, 90, 31, 1)',
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(49, 196, 141, 1)',
+                            'rgba(255, 90, 31, 1)',
+                            'rgba(255, 90, 31, 1)'
+                        ];
+                        
+                        // Update tooltip callback for air quality
+                        pollutionChart.options.plugins.tooltip.callbacks.label = function(context) {
+                            let value = context.raw;
+                            let quality = "";
+                            
+                            if (value < 50) quality = "Good";
+                            else if (value < 100) quality = "Moderate";
+                            else if (value < 150) quality = "Unhealthy for Sensitive Groups";
+                            else if (value < 200) quality = "Unhealthy";
+                            else if (value < 300) quality = "Very Unhealthy";
+                            else quality = "Hazardous";
+                            
+                            return `AQI: ${value} (${quality})`;
+                        };
+                        
+                    } else if (this.textContent === 'Water') {
+                        pollutionChart.data.datasets[0].label = 'Water Quality Index (WQI)';
+                        pollutionChart.data.datasets[0].data = [82, 78, 65, 90, 72, 88, 76, 80];
+                        pollutionChart.options.scales.y.title.text = 'Water Quality Index (WQI)';
+                        
+                        // Update colors based on WQI values (higher is better for WQI)
+                        pollutionChart.data.datasets[0].backgroundColor = [
+                            'rgba(49, 196, 141, 0.7)',  // CA
+                            'rgba(49, 196, 141, 0.6)',  // NY
+                            'rgba(255, 90, 31, 0.7)',   // TX
+                            'rgba(49, 196, 141, 0.8)',  // FL
+                            'rgba(255, 90, 31, 0.7)',   // IL
+                            'rgba(49, 196, 141, 0.8)',  // PA
+                            'rgba(49, 196, 141, 0.6)',  // OH
+                            'rgba(49, 196, 141, 0.7)'   // MI
+                        ];
+                        
+                        pollutionChart.data.datasets[0].borderColor = [
+                            'rgba(49, 196, 141, 1)',
+                            'rgba(49, 196, 141, 1)',
+                            'rgba(255, 90, 31, 1)',
+                            'rgba(49, 196, 141, 1)',
+                            'rgba(255, 90, 31, 1)',
+                            'rgba(49, 196, 141, 1)',
+                            'rgba(49, 196, 141, 1)',
+                            'rgba(49, 196, 141, 1)'
+                        ];
+                        
+                        // Update tooltip callback for water quality
+                        pollutionChart.options.plugins.tooltip.callbacks.label = function(context) {
+                            let value = context.raw;
+                            let quality = "";
+                            
+                            if (value > 90) quality = "Excellent";
+                            else if (value > 80) quality = "Good";
+                            else if (value > 70) quality = "Fair";
+                            else if (value > 60) quality = "Marginal";
+                            else quality = "Poor";
+                            
+                            return `WQI: ${value} (${quality})`;
+                        };
+                        
+                    } else if (this.textContent === 'Soil') {
+                        pollutionChart.data.datasets[0].label = 'Soil Contamination Index';
+                        pollutionChart.data.datasets[0].data = [28, 35, 42, 22, 38, 18, 25, 31];
+                        pollutionChart.options.scales.y.title.text = 'Soil Contamination Index';
+                        
+                        // Update colors based on Soil Contamination (lower is better)
+                        pollutionChart.data.datasets[0].backgroundColor = [
+                            'rgba(255, 90, 31, 0.6)',   // CA
+                            'rgba(255, 90, 31, 0.7)',   // NY
+                            'rgba(224, 36, 36, 0.7)',   // TX
+                            'rgba(49, 196, 141, 0.7)',  // FL
+                            'rgba(224, 36, 36, 0.6)',   // IL
+                            'rgba(49, 196, 141, 0.8)',  // PA
+                            'rgba(49, 196, 141, 0.7)',  // OH
+                            'rgba(255, 90, 31, 0.6)'    // MI
+                        ];
+                        
+                        pollutionChart.data.datasets[0].borderColor = [
+                            'rgba(255, 90, 31, 1)',
+                            'rgba(255, 90, 31, 1)',
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(49, 196, 141, 1)',
+                            'rgba(224, 36, 36, 1)',
+                            'rgba(49, 196, 141, 1)',
+                            'rgba(49, 196, 141, 1)',
+                            'rgba(255, 90, 31, 1)'
+                        ];
+                        
+                        // Update tooltip callback for soil contamination
+                        pollutionChart.options.plugins.tooltip.callbacks.label = function(context) {
+                            let value = context.raw;
+                            let quality = "";
+                            
+                            if (value < 20) quality = "Low contamination";
+                            else if (value < 30) quality = "Moderate contamination";
+                            else if (value < 40) quality = "High contamination";
+                            else quality = "Severe contamination";
+                            
+                            return `Contamination: ${value} (${quality})`;
+                        };
+                    }
+                    
+                    pollutionChart.update();
+                });
+            });
+        });
+    </script>
+</body>
+</html>
