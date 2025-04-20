@@ -679,7 +679,7 @@
 
         async function getWeather(cityName) {
             try {
-                let res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid=5a7709ef0961d0c23e6e05dc04fcdca4`);
+                let res = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${cityName}&appid={apikey}`);
                 
                 if (!res.ok) {
                     throw new Error(`City not found or API error: ${res.status}`);
