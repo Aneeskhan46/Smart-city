@@ -1,3 +1,44 @@
+
+  // Disable right-click context menu
+  document.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+  });
+
+  // Disable key combinations
+  document.addEventListener("keydown", function (e) {
+    // Disable F12
+    if (e.key === "F12") {
+      e.preventDefault();
+    }
+
+    // Disable Ctrl+Shift+I
+    if (e.ctrlKey && e.shiftKey && e.key === "I") {
+      e.preventDefault();
+    }
+
+    // Disable Ctrl+Shift+J
+    if (e.ctrlKey && e.shiftKey && e.key === "J") {
+      e.preventDefault();
+    }
+
+    // Disable Ctrl+U
+    if (e.ctrlKey && e.key === "u") {
+      e.preventDefault();
+    }
+
+    // Disable Ctrl+Shift+C
+    if (e.ctrlKey && e.shiftKey && e.key === "C") {
+      e.preventDefault();
+    }
+  });
+
+
+
+
+
+
+
+
 let inp=document.querySelector(".form-control")
 let btn = document.querySelector("#formButton")
 let ul= document.querySelector("#ul")
@@ -71,7 +112,7 @@ async function getWeather(inpvalue) {
         let feels_like=`${(data.main.feels_like-273.15).toFixed(2)}`
         console.log(feels_like)
 
-        let result = [` ${data.name}`, `Feels_like : ${(data.main.feels_like-273.15).toFixed(2)}℃`,`Ground Level : ${ data.main.grnd_level}`, `Humidity : ${ data.main.humidity}`, `Pressure : ${ data.main.pressure}`, `Sea level: ${  data.main.sea_level}`, `Temperature Maximum : ${(data.main.temp_max - 273.15).toFixed(2)}℃`, `Temperature Minimum : ${ (data.main.temp_min - 273.15).toFixed(2)}℃`]
+        let result = [` ${data.name}`, `Feels_like :🌡️  ${(data.main.feels_like-273.15).toFixed(2)}℃`,`Ground Level : 🌍 ${ data.main.grnd_level} hPa`, `Humidity : 💧 ${ data.main.humidity}%`, `Pressure : 📉 ${ data.main.pressure} hPa`, `Sea level: 🌊 ${  data.main.sea_level} hPa`, `Temperature Maximum : 🌡️ ${(data.main.temp_max - 273.15).toFixed(2)}℃`, `Temperature Minimum : 🌡️ ${ (data.main.temp_min - 273.15).toFixed(2)}℃`]
 
         // let result = {
         //     name : data.name,
